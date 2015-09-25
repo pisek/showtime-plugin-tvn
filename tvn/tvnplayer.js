@@ -1,13 +1,31 @@
 /**
- * Very simple plugin example of browsing music
+ *  TVN Player plugin for Movian
+ *
+ *  Copyright (C) 2015 Brs & Pisek
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *  
  */
 
+
 (function (plugin) {
+	
     var prefix = "tvn",
 		baseUrl = "https://api.tvnplayer.pl/api/?v=3.0&authKey=ba786b315508f0920eca1c34d65534cd&platform=ConnectedTV&terminal=Samsung&format=json",
 		baseAssetUrl = "http://redir.atmcdn.pl/scale/o2/tvn/web-content/m/",
 		userAgent = "Mozilla/5.0 (SmartHub; SMART-TV; U; Linux/SmartTV; Maple2012) AppleWebKit/534.7 (KHTML, like Gecko) SmartTV Safari/534.7",
-		defaultHeaders = { "User-Agent": userAgent};
+		defaultHeaders = { "User-Agent": userAgent };
 		
     function createTitle(name, episode, season) {
         var title = name;
@@ -70,14 +88,14 @@
 
     plugin.addURI(prefix+":start", function (page) {
         page.type = "directory";
+        page.loading = true;
         page.metadata.title = "TVN Player";
 
-        var url = baseUrl + "&m=mainInfo",
-            mainInfoRespone = showtime.httpReq(url),
-            mainInfo = showtime.JSONDecode(mainInfoRespone.toString()),
-            item,
-            i;
-        for (i = 0; i < mainInfo.categories.length; i = i + 1) {
+        var url = baseUrl + "&m=mainInfo";
+        var mainInfoRespone = showtime.httpReq(url);
+		var mainInfo = showtime.JSONDecode(mainInfoRespone.toString());
+        var item;
+        for (var i = 0; i < mainInfo.categories.length; i++) {
             item = mainInfo.categories[i];
             if (item.type == "catalog") {
                 page.appendItem(prefix+":" + item.type + ":" + item.id + ":" + item.name, "directory", {
@@ -88,61 +106,54 @@
         }
         page.loading = false;
     });
+    
     plugin.addURI(prefix+":catalog:(.+):(.+)", function (page, arg, pageTitle) {
-		var pageNumber = 1,
-			sort = "alfa",
-			pageSize = 20;
+		var pageNumber = 1;
+		var sort = "alfa";
+		var pageSize = 20;
         page.type = "directory";
         page.metadata.title = pageTitle;
         function loader() {
 			page.loading = true;
-			var url = baseUrl + "&m=getItems&isUserLogged=0&type=catalog&id="+arg+"&category=0&limit="+pageSize+"&sort="+sort+"&page="+pageNumber,
-				mainInfoRespone = showtime.httpReq(url),
-				mainInfo = showtime.JSONDecode(mainInfoRespone.toString()),
-				i,
-				item,
-				allItemsCount = mainInfo.count_items;
-            page.loading = false;
-			for (i = 0; i < mainInfo.items.length; i = i + 1) {
-				item = mainInfo.items[i];
-				page.appendItem(prefix+":" + item.type + ":" + item.id, "video", {
+			var url = baseUrl + "&m=getItems&isUserLogged=0&type=catalog&id="+arg+"&category=0&limit="+pageSize+"&sort="+sort+"&page="+pageNumber;
+			var mainInfoRespone = showtime.httpReq(url);
+			var mainInfo = showtime.JSONDecode(mainInfoRespone.toString());
+			var allItemsCount = mainInfo.count_items;
+			for (var i = 0; i < mainInfo.items.length; i++) {
+				var item = mainInfo.items[i];
+				page.appendItem(prefix+":" + item.type + ":" + item.id + ":" + item.title, "video", {
 					title: item.title,
 					icon: createThumbnailUrl(item.thumbnail[0])
 				});
 			}
-			if (pageNumber++*pageSize > allItemsCount) {
-				return false;
-			} else {
-				return true;
-			}
+			page.loading = false;
+			
+			return !(pageNumber++ * pageSize > allItemsCount);
 		}
 		
 		if(loader()) {
 			page.paginator = loader;
 		}
     });
-    plugin.addURI(prefix+":series:(.+)", function (page, arg) {
-        var pageNumber = 1,
-			sort = "newest",
-			pageSize = 20;
+    
+    plugin.addURI(prefix+":series:(.+):(.+)", function (page, arg, pageTitle) {
+        var pageNumber = 1;
+		var sort = "newest";
+		var pageSize = 20;
         page.type = "directory";
+        page.metadata.title = pageTitle;
         function loader() {     
 			page.loading = true;
-			var url = baseUrl + "&m=getItems&isUserLogged=0&type=series&limit="+pageSize+"&page="+pageNumber+"&sort="+sort+"&id="+arg,
-				mainInfoRespone = showtime.httpReq(url),
-				mainInfo = showtime.JSONDecode(mainInfoRespone.toString()),
-				i,
-				item,
-				title,
-				allItemsCount = mainInfo.count_items;
-			page.loading = false;
-			for (i = 0; i < mainInfo.items.length; i = i + 1) {
-				item = mainInfo.items[i];
-				if (item.type_episode == "preview_prepremiere")
-				{
+			var url = baseUrl + "&m=getItems&isUserLogged=0&type=series&limit="+pageSize+"&page="+pageNumber+"&sort="+sort+"&id="+arg;
+			var mainInfoRespone = showtime.httpReq(url);
+			var mainInfo = showtime.JSONDecode(mainInfoRespone.toString());
+			var allItemsCount = mainInfo.count_items;
+			for (var i = 0; i < mainInfo.items.length; i++) {
+				var item = mainInfo.items[i];
+				if (item.type_episode == "preview_prepremiere")	{
 					continue;
 				}
-				title = createTitle(item.title, item.episode, item.season);
+				var title = createTitle(item.title, item.episode, item.season);
 				page.appendItem(prefix+":" + item.type + ":" + item.id, "video", {
 					title: title,
 					description: item.lead,
@@ -150,22 +161,24 @@
 					icon: createThumbnailUrl(item.thumbnail[0])
 				});
 			}
-			if (pageNumber++*pageSize > allItemsCount) {
-				return false;
-			} else {
-				return true;
-			}
+			page.loading = false;
+			
+			return !(pageNumber++*pageSize > allItemsCount);
 		}
+		
 		if(loader()) {
 			page.paginator = loader;
 		}
     });
+    
     plugin.addURI(prefix+":episode:(.+)", function (page, arg) {
-        var url = baseUrl + "&m=getItem&isUserLogged=0&id="+arg,
-            mainInfoRespone = showtime.httpReq(url),
-            mainInfo = showtime.JSONDecode(mainInfoRespone.toString()),
-            item = mainInfo.item,
-            title;
+        var url = baseUrl + "&m=getItem&isUserLogged=0&id="+arg;
+        var mainInfoRespone = showtime.httpReq(url);
+        var mainInfo = showtime.JSONDecode(mainInfoRespone.toString());
+        var item = mainInfo.item;
+        var title;
+        page.type = "directory";
+        page.loading = true;
         if (item.title) {
             title = item.title;
         } else {
@@ -190,51 +203,42 @@
             
         }
         page.loading = false;
-        page.type = "directory";
     });
+    
     plugin.addURI(prefix+":video:(.+):(.+)", function (page, arg, quality) {
-        var url = baseUrl + "&m=getItem&isUserLogged=0&id="+arg,
-            mainInfoRespone = showtime.httpReq(url),
-            mainInfo = showtime.JSONDecode(mainInfoRespone.toString()),
-            item = mainInfo.item,
-            i,
-            video,
-            title,
-            metadata = {};
-        if (item.title)
-        {
+        var url = baseUrl + "&m=getItem&isUserLogged=0&id="+arg;
+        var mainInfoRespone = showtime.httpReq(url);
+        var mainInfo = showtime.JSONDecode(mainInfoRespone.toString());
+        var item = mainInfo.item;
+        var title;
+        var metadata = {};
+        page.loading = false;
+        if (item.title) {
             title = item.title;
         } else {
             title = createTitle(item.serie_title, item.episode, item.season);
         }
         page.metadata.title = title;
-        if (item.title && item.serie_title)
-        {
+        
+        if (item.title && item.serie_title) {
 			metadata.title = item.serie_title+" - "+item.title;
-		}
-		else if (item.serie_title)
-		{
+		} else if (item.serie_title) {
 			metadata.title = item.serie_title;
 			metadata.season = item.season;
 			metadata.episode = item.episode;
-		}
-		else
-		{
+		} else {
 			metadata.title = item.title;
 		}
         
-        var videos = item.videos.main.video_content,
-			videoUrl,
-			bitrate = 0,
-			currentBitrate = -1;
-		if (!videos)
-		{
+        var videos = item.videos.main.video_content;
+		var videoUrl;
+		var bitrate = 0;
+		if (!videos) {
 			page.error("Selected video is not available on this platform.");
 			return;
 		}
-        for (i=0; i<videos.length;i = i + 1)
-        {
-            video = videos[i];
+        for (var i=0; i<videos.length; i++) {
+            var video = videos[i];
             if (quality == video.profile_name) {
             	videoUrl = video.url;
             	bitrate = toBitrate(video.profile_name);
@@ -247,10 +251,11 @@
         }
         var videoUrl = showtime.httpReq(videoUrl).toString();
         metadata.canonicalUrl = prefix+":episode:"+arg;
-        metadata.sources = [{ url: videoUrl, bitrate: bitrate }]
+        metadata.sources = [{ url: videoUrl, bitrate: bitrate }];
         metadata.no_fs_scan = true;
         page.loading = false;
         page.source = "videoparams:"+showtime.JSONEncode(metadata);
         page.type = "video";
     });
+    
 })(this);
