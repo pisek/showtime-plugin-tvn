@@ -21,11 +21,16 @@
 
 (function (plugin) {
 	
-    var prefix = "tvn",
-		baseUrl = "https://api.tvnplayer.pl/api/?v=3.0&authKey=ba786b315508f0920eca1c34d65534cd&platform=ConnectedTV&terminal=Samsung&format=json",
-		baseAssetUrl = "http://redir.atmcdn.pl/scale/o2/tvn/web-content/m/",
-		userAgent = "Mozilla/5.0 (SmartHub; SMART-TV; U; Linux/SmartTV; Maple2012) AppleWebKit/534.7 (KHTML, like Gecko) SmartTV Safari/534.7",
-		defaultHeaders = { "User-Agent": userAgent };
+    var PREFIX = plugin.getDescriptor().id;
+    var LOGO = plugin.path + "tvnplayer.png";
+	var BASE_URL = "https://api.tvnplayer.pl/api/?v=3.0&authKey=ba786b315508f0920eca1c34d65534cd&platform=ConnectedTV&terminal=Samsung&format=json";
+	var BASE_ASSET_URL = "http://redir.atmcdn.pl/scale/o2/tvn/web-content/m/";
+	var USER_AGENT = "Mozilla/5.0 (SmartHub; SMART-TV; U; Linux/SmartTV; Maple2012) AppleWebKit/534.7 (KHTML, like Gecko) SmartTV Safari/534.7";
+	var DEFAULT_HEADERS = { "User-Agent": USER_AGENT };
+	
+	function d(c) {
+		print(JSON.stringify(c, null, 4));
+	}
 		
     function createTitle(name, episode, season) {
         var title = name;
@@ -42,7 +47,7 @@
     }
     
     function createThumbnailUrl(thumbnail) {
-        var url = baseAssetUrl + thumbnail.url + "?";
+        var url = BASE_ASSET_URL + thumbnail.url + "?";
         url+="type="+thumbnail.type;
         url+="&quality=85";
         url+="&srcmode=0";
@@ -84,21 +89,37 @@
 		return 0;
 	}
     
-    plugin.createService("TVN Player", prefix+":start", "video", true, plugin.path + "tvnplayer.png");
+    var service = plugin.createService(plugin.getDescriptor().title, PREFIX+":start", "video", true, LOGO);
+    
+    var settings = plugin.createSettings(plugin.getDescriptor().title, LOGO, plugin.getDescriptor().synopsis);
+    
+    settings.createMultiOpt('quality', "Jakość wideo (jeśli nie jest dostępna, wybrana będzie najwyższa możliwa, niższa od wybranej)", [
+        ['letMeChoose', 'Daj mi wybrac', true],
+        ['Standard', 'Standard'],
+        ['HD', 'HD'],
+        ['Bardzo wysoka', 'Bardzo wysoka'],
+        ['Wysoka', 'Wysoka'],
+        ['Średnia', 'Średnia'],
+        ['Niska', 'Niska'],
+        ['Bardzo niska', 'Bardzo niska']
+        ], function(v) {
+            service.quality = v;
+    	}
+    );
 
-    plugin.addURI(prefix+":start", function (page) {
+    plugin.addURI(PREFIX+":start", function (page) {
         page.type = "directory";
         page.loading = true;
-        page.metadata.title = "TVN Player";
+        page.metadata.title = plugin.getDescriptor().title;
 
-        var url = baseUrl + "&m=mainInfo";
+        var url = BASE_URL + "&m=mainInfo";
         var mainInfoRespone = showtime.httpReq(url);
 		var mainInfo = showtime.JSONDecode(mainInfoRespone.toString());
         var item;
         for (var i = 0; i < mainInfo.categories.length; i++) {
             item = mainInfo.categories[i];
             if (item.type == "catalog") {
-                page.appendItem(prefix+":" + item.type + ":" + item.id + ":" + item.name, "directory", {
+                page.appendItem(PREFIX+":" + item.type + ":" + item.id + ":" + item.name, "directory", {
                     title: item.name,
                     icon: createThumbnailUrl(item.thumbnail[0])
                 });
@@ -107,7 +128,7 @@
         page.loading = false;
     });
     
-    plugin.addURI(prefix+":catalog:(.+):(.+)", function (page, arg, pageTitle) {
+    plugin.addURI(PREFIX+":catalog:(.+):(.+)", function (page, arg, pageTitle) {
 		var pageNumber = 1;
 		var sort = "alfa";
 		var pageSize = 20;
@@ -115,13 +136,13 @@
         page.metadata.title = pageTitle;
         function loader() {
 			page.loading = true;
-			var url = baseUrl + "&m=getItems&isUserLogged=0&type=catalog&id="+arg+"&category=0&limit="+pageSize+"&sort="+sort+"&page="+pageNumber;
+			var url = BASE_URL + "&m=getItems&isUserLogged=0&type=catalog&id="+arg+"&category=0&limit="+pageSize+"&sort="+sort+"&page="+pageNumber;
 			var mainInfoRespone = showtime.httpReq(url);
 			var mainInfo = showtime.JSONDecode(mainInfoRespone.toString());
 			var allItemsCount = mainInfo.count_items;
 			for (var i = 0; i < mainInfo.items.length; i++) {
 				var item = mainInfo.items[i];
-				page.appendItem(prefix+":" + item.type + ":" + item.id + ":" + item.title, "video", {
+				page.appendItem(PREFIX+":" + item.type + ":" + item.id + ":" + item.title, "video", {
 					title: item.title,
 					icon: createThumbnailUrl(item.thumbnail[0])
 				});
@@ -136,7 +157,7 @@
 		}
     });
     
-    plugin.addURI(prefix+":series:(.+):(.+)", function (page, arg, pageTitle) {
+    plugin.addURI(PREFIX+":series:(.+):(.+)", function (page, arg, pageTitle) {
         var pageNumber = 1;
 		var sort = "newest";
 		var pageSize = 20;
@@ -144,7 +165,7 @@
         page.metadata.title = pageTitle;
         function loader() {     
 			page.loading = true;
-			var url = baseUrl + "&m=getItems&isUserLogged=0&type=series&limit="+pageSize+"&page="+pageNumber+"&sort="+sort+"&id="+arg;
+			var url = BASE_URL + "&m=getItems&isUserLogged=0&type=series&limit="+pageSize+"&page="+pageNumber+"&sort="+sort+"&id="+arg;
 			var mainInfoRespone = showtime.httpReq(url);
 			var mainInfo = showtime.JSONDecode(mainInfoRespone.toString());
 			var allItemsCount = mainInfo.count_items;
@@ -154,7 +175,7 @@
 					continue;
 				}
 				var title = createTitle(item.title, item.episode, item.season);
-				page.appendItem(prefix+":" + item.type + ":" + item.id, "video", {
+				page.appendItem(PREFIX+":" + item.type + ":" + item.id, "video", {
 					title: title,
 					description: item.lead,
 					duration: item.run_time,
@@ -171,14 +192,20 @@
 		}
     });
     
-    plugin.addURI(prefix+":episode:(.+)", function (page, arg) {
-        var url = baseUrl + "&m=getItem&isUserLogged=0&id="+arg;
+    plugin.addURI(PREFIX+":episode:(.+)", function (page, arg) {
+        var url = BASE_URL + "&m=getItem&isUserLogged=0&id="+arg;
         var mainInfoRespone = showtime.httpReq(url);
         var mainInfo = showtime.JSONDecode(mainInfoRespone.toString());
         var item = mainInfo.item;
         var title;
-        page.type = "directory";
         page.loading = true;
+        
+        if (service.quality == 'letMeChoose') {
+        	page.type = "directory";
+        } else {
+        	page.type = "video";
+        }
+        
         if (item.title) {
             title = item.title;
         } else {
@@ -186,27 +213,64 @@
         }
         page.metadata.title = title;
         
+        
         var videos = item.videos.main.video_content;
 		if (!videos) {
 			page.error("Selected video is not available on this platform.");
 			return;
 		}
+		
         for (var i=0; i<videos.length; i++) {
             var video = videos[i];
             
-			page.appendItem(prefix+":video:" + item.id + ":" + video.profile_name, "video", {
-				title: video.profile_name,
-				description: item.lead,
-				duration: item.run_time,
-				icon: createThumbnailUrl(item.thumbnail[0])
-			});
+            if (service.quality == 'letMeChoose') {
+            	
+            	page.appendItem(PREFIX+":video:" + item.id + ":" + video.profile_name, "video", {
+					title: video.profile_name,
+					description: item.lead,
+					duration: item.run_time,
+					icon: createThumbnailUrl(item.thumbnail[0])
+				});
+            	
+            } else {	//find desired quality
+            	
+            	if (service.quality == video.profile_name) {
+            		page.redirect(PREFIX+":video:" + item.id + ":" + video.profile_name);
+            		break;
+            	}
+            	
+            }
             
         }
+        
+        if (service.quality != 'letMeChoose') {	//and still did not found desired quality
+        	var desiredBitrate = toBitrate(service.quality);
+        	var currentBitrate;
+        	var currentQuality;
+        	for (var i=0; i<videos.length; i++) {
+	            var video = videos[i];
+	            var bitrate = toBitrate(video.profile_name);
+	            if (bitrate > currentBitrate && bitrate < desiredBitrate) {
+					currentBitrate = bitrate;
+					currentQuality = video.profile_name;
+				}
+	        }
+	        
+	        if (currentQuality == null) {
+	        	page.error("Selected video is not available on this platform.");
+				return;
+	        }
+	        page.redirect(PREFIX+":video:" + item.id + ":" + currentQuality);
+	        
+        }
+        
         page.loading = false;
     });
     
-    plugin.addURI(prefix+":video:(.+):(.+)", function (page, arg, quality) {
-        var url = baseUrl + "&m=getItem&isUserLogged=0&id="+arg;
+    plugin.addURI(PREFIX+":video:(.+):(.+)", function (page, arg, quality) {
+    	d(PREFIX+":video:"+arg+":"+quality);
+        var url = BASE_URL + "&m=getItem&isUserLogged=0&id="+arg;
+        d(url);
         var mainInfoRespone = showtime.httpReq(url);
         var mainInfo = showtime.JSONDecode(mainInfoRespone.toString());
         var item = mainInfo.item;
@@ -242,6 +306,7 @@
             if (quality == video.profile_name) {
             	videoUrl = video.url;
             	bitrate = toBitrate(video.profile_name);
+            	d("Found quality: "+ quality);
             	break;
             }
         }
@@ -250,9 +315,10 @@
 			return;
         }
         var videoUrl = showtime.httpReq(videoUrl).toString();
-        metadata.canonicalUrl = prefix+":episode:"+arg;
+        metadata.canonicalUrl = PREFIX+":episode:"+arg;
         metadata.sources = [{ url: videoUrl, bitrate: bitrate }];
         metadata.no_fs_scan = true;
+        d(metadata);
         page.loading = false;
         page.source = "videoparams:"+showtime.JSONEncode(metadata);
         page.type = "video";
