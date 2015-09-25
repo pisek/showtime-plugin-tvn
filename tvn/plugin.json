@@ -5,7 +5,7 @@
   "title": "TVN Player",
   "icon": "tvnplayer.png",
   "synopsis": "TVN Player is a VOD service from one of Polands largest private TV stations.",
-  "description": "<p>TVN Player is a VOD service from one of Polands largest private TV stations.</p> For more information visit <a href=\"http://www.tvnplayer.pl\">http://www.tvnplayer.pl</a>",
+  "description": "<p>TVN Player is a VOD service from one of Polands largest private TV stations.</p> For more information visit <a href=\"http://player.pl/\">http://player.pl/</a>",
   "category": "video",
   "author": "Brs",
   "version": "0.1.1",

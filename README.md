@@ -1,5 +1,5 @@
-# showtime-plugin-cda
+# showtime-plugin-tvn
 
-CDA.PL - Polish site with variety of content (mainly movies with polish dubbing and subtitles)
+TVN Player is a VOD service from one of Polands largest private TV stations.
 
-For additional info, visit http://cda.pl
+For more information visit http://player.pl
