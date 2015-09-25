@@ -1,13 +1,14 @@
 {
-  "type": "javascript",
-  "id": "tvn",
-  "file": "tvnplayer.js",
-  "title": "TVN Player",
-  "icon": "tvnplayer.png",
-  "synopsis": "TVN Player is a VOD service from one of Polands largest private TV stations.",
-  "description": "<p>TVN Player is a VOD service from one of Polands largest private TV stations.</p> For more information visit <a href=\"http://player.pl/\">http://player.pl/</a>",
-  "category": "video",
-  "author": "Brs",
-  "version": "0.1.1",
-  "showtimeVersion": "4.7.55"
+	"description": "<p>TVN Player 2 is a VOD service from one of Polands largest private TV stations.</p> For more information visit <a href=\"http://player.pl/\">http://player.pl/</a>",
+	"author": "Brs,pisek",
+	"homepage": "https://github.com/pisek/showtime-plugin-tvn",
+	"title": "TVN Player 2",
+	"synopsis": "TVN Player 2 is a VOD service from one of Polands largest private TV stations.",
+	"version": "0.1.1",
+	"file": "tvnplayer.js",
+	"showtimeVersion": "4.9.46",
+	"type": "ecmascript",
+	"id": "tvn",
+	"icon": "tvnplayer.png",
+	"category": "video"
 }

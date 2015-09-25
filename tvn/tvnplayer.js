@@ -3,7 +3,7 @@
  */
 
 (function (plugin) {
-    var prefix = "tvn",
+    var prefix = "tvn2",
 		baseUrl = "https://api.tvnplayer.pl/api/?v=3.0&authKey=ba786b315508f0920eca1c34d65534cd&platform=ConnectedTV&terminal=Samsung&format=json",
 		baseAssetUrl = "http://redir.atmcdn.pl/scale/o2/tvn/web-content/m/",
 		userAgent = "Mozilla/5.0 (SmartHub; SMART-TV; U; Linux/SmartTV; Maple2012) AppleWebKit/534.7 (KHTML, like Gecko) SmartTV Safari/534.7",
@@ -66,11 +66,11 @@
 		return 0;
 	}
 
-    plugin.createService("TVN Player", prefix+":start", "video", true, plugin.path + "tvnplayer.png");
+    plugin.createService("TVN Player 2", prefix+":start", "video", true, plugin.path + "tvnplayer.png");
 
     plugin.addURI(prefix+":start", function (page) {
         page.type = "directory";
-        page.metadata.title = "TVN Player";
+        page.metadata.title = "TVN Player 2";
 
         var url = baseUrl + "&m=mainInfo",
             mainInfoRespone = showtime.httpReq(url),
