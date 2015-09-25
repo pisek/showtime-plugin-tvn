@@ -3,7 +3,7 @@
 	"author": "Brs,pisek",
 	"homepage": "https://github.com/pisek/showtime-plugin-tvn",
 	"title": "TVN Player",
-	"synopsis": "TVN Player is a VOD service from one of Polands largest private TV stations. This is an updated version of Brs TVN Player plugin",
+	"synopsis": "TVN Player is a VOD service from one of Polands largest private TV stations. This is an updated version of Brs TVN Player plugin.",
 	"version": "0.2.0",
 	"file": "tvnplayer.js",
 	"showtimeVersion": "4.9.46",

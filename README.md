@@ -1,5 +1,6 @@
 # showtime-plugin-tvn
 
-TVN Player 2 is a VOD service from one of Polands largest private TV stations.
+TVN Player is a VOD service from one of Polands largest private TV stations.
+This is an updated version of Brs TVN Player plugin.
 
 For more information visit http://player.pl
