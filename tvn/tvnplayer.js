@@ -3,7 +3,7 @@
  */
 
 (function (plugin) {
-    var prefix = "tvn2",
+    var prefix = "tvn",
 		baseUrl = "https://api.tvnplayer.pl/api/?v=3.0&authKey=ba786b315508f0920eca1c34d65534cd&platform=ConnectedTV&terminal=Samsung&format=json",
 		baseAssetUrl = "http://redir.atmcdn.pl/scale/o2/tvn/web-content/m/",
 		userAgent = "Mozilla/5.0 (SmartHub; SMART-TV; U; Linux/SmartTV; Maple2012) AppleWebKit/534.7 (KHTML, like Gecko) SmartTV Safari/534.7",
@@ -65,12 +65,12 @@
 		}
 		return 0;
 	}
-
-    plugin.createService("TVN Player 2", prefix+":start", "video", true, plugin.path + "tvnplayer.png");
+    
+    plugin.createService("TVN Player", prefix+":start", "video", true, plugin.path + "tvnplayer.png");
 
     plugin.addURI(prefix+":start", function (page) {
         page.type = "directory";
-        page.metadata.title = "TVN Player 2";
+        page.metadata.title = "TVN Player";
 
         var url = baseUrl + "&m=mainInfo",
             mainInfoRespone = showtime.httpReq(url),
@@ -146,7 +146,7 @@
 				page.appendItem(prefix+":" + item.type + ":" + item.id, "video", {
 					title: title,
 					description: item.lead,
-					duration: item.end_credits_start,
+					duration: item.run_time,
 					icon: createThumbnailUrl(item.thumbnail[0])
 				});
 			}
@@ -161,6 +161,38 @@
 		}
     });
     plugin.addURI(prefix+":episode:(.+)", function (page, arg) {
+        var url = baseUrl + "&m=getItem&isUserLogged=0&id="+arg,
+            mainInfoRespone = showtime.httpReq(url),
+            mainInfo = showtime.JSONDecode(mainInfoRespone.toString()),
+            item = mainInfo.item,
+            title;
+        if (item.title) {
+            title = item.title;
+        } else {
+            title = createTitle(item.serie_title, item.episode, item.season);
+        }
+        page.metadata.title = title;
+        
+        var videos = item.videos.main.video_content;
+		if (!videos) {
+			page.error("Selected video is not available on this platform.");
+			return;
+		}
+        for (var i=0; i<videos.length; i++) {
+            var video = videos[i];
+            
+			page.appendItem(prefix+":video:" + item.id + ":" + video.profile_name, "video", {
+				title: video.profile_name,
+				description: item.lead,
+				duration: item.run_time,
+				icon: createThumbnailUrl(item.thumbnail[0])
+			});
+            
+        }
+        page.loading = false;
+        page.type = "directory";
+    });
+    plugin.addURI(prefix+":video:(.+):(.+)", function (page, arg, quality) {
         var url = baseUrl + "&m=getItem&isUserLogged=0&id="+arg,
             mainInfoRespone = showtime.httpReq(url),
             mainInfo = showtime.JSONDecode(mainInfoRespone.toString()),
@@ -203,12 +235,15 @@
         for (i=0; i<videos.length;i = i + 1)
         {
             video = videos[i];
-            currentBitrate = toBitrate(video.profile_name)
-            if (currentBitrate > bitrate)
-            {
-				videoUrl = video.url;
-				bitrate = currentBitrate;
-			}
+            if (quality == video.profile_name) {
+            	videoUrl = video.url;
+            	bitrate = toBitrate(video.profile_name);
+            	break;
+            }
+        }
+        if (videoUrl == null) {
+        	page.error("Selected video is not available on this platform.");
+			return;
         }
         var videoUrl = showtime.httpReq(videoUrl).toString();
         metadata.canonicalUrl = prefix+":episode:"+arg;
