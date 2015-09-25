@@ -4,7 +4,7 @@
 	"homepage": "https://github.com/pisek/showtime-plugin-tvn",
 	"title": "TVN Player",
 	"synopsis": "TVN Player is a VOD service from one of Polands largest private TV stations.",
-	"version": "0.1.2",
+	"version": "0.2.0",
 	"file": "tvnplayer.js",
 	"showtimeVersion": "4.9.46",
 	"type": "ecmascript",
