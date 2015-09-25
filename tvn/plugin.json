@@ -1,14 +1,14 @@
 {
-	"description": "<p>TVN Player is a VOD service from one of Polands largest private TV stations.</p><p>This is an updated version of Brs TVN Player plugin.</p> For more information visit <a href=\"http://player.pl/\">http://player.pl/</a>",
-	"author": "Brs,pisek",
+	"description": "<p>TVN Player is a VOD service from one of Poland's largest private TV stations.</p><p>This is an updated version of Brs TVN Player plugin.</p> For more information visit <a href=\"http://player.pl/\">http://player.pl/</a>",
+	"author": "Brs, pisek",
 	"homepage": "https://github.com/pisek/showtime-plugin-tvn",
-	"title": "TVN Player",
-	"synopsis": "TVN Player is a VOD service from one of Polands largest private TV stations. This is an updated version of Brs TVN Player plugin.",
+	"title": "TVN Player 2",
+	"synopsis": "TVN Player is a VOD service from one of Poland's largest private TV stations. This is an updated version of Brs TVN Player plugin.",
 	"version": "0.2.0",
 	"file": "tvnplayer.js",
 	"showtimeVersion": "4.9.46",
 	"type": "ecmascript",
-	"id": "tvn",
+	"id": "tvn2",
 	"icon": "tvnplayer.png",
 	"category": "video"
 }
