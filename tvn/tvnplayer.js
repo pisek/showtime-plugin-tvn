@@ -221,10 +221,8 @@
 		}
 		
        	var desiredBitrate = toBitrate(service.quality);
-       	var currentBitrateFromTop;
-       	var currentQualityFromTop;
-       	var currentBitrateFromBottom;
-       	var currentQualityFromBottom;
+       	var currentBitrate;
+       	var currentQuality;
         for (var i=0; i<videos.length; i++) {
             var video = videos[i];
             
@@ -244,37 +242,32 @@
             		break;
             	}
             	
-            	var video = videos[i];
 		        var bitrate = toBitrate(video.profile_name);
 
-		        //find closest quality from top
-		        if (bitrate > currentBitrateFromTop && bitrate < desiredBitrate) {
-					currentBitrateFromTop = bitrate;
-					currentQualityFromTop = video.profile_name;
-				}
-            	
-	        	//find closest quality from bottom
-		        if (bitrate > currentBitrateFromBottom && bitrate < desiredBitrate) {
-					currentBitrateFromBottom = bitrate;
-					currentQualityFromBottom = video.profile_name;
+				//find closest quality from bottom
+		        if (bitrate > currentBitrate && bitrate < desiredBitrate) {
+					currentBitrate = bitrate;
+					currentQuality = video.profile_name;
+					continue;
 				}
 		        
+		        //find closest quality from top
+		        if (bitrate < currentBitrate && bitrate > desiredBitrate) {
+					currentBitrate = bitrate;
+					currentQuality = video.profile_name;
+					continue;
+				}
+            	
             }
             
         }
         page.loading = false;
         
         if (service.quality != 'letMeChoose') {
-        	if (currentQualityFromTop == null && currentQualityFromBottom == null) {
+        	if (currentQuality == null) {
 		       	page.error("Selected video is not available on this platform.");
 				return;
 		    } else {
-				var currentQuality;
-		    	if (currentQualityFromBottom != null) {	//take from bottom first
-		    		currentQuality = currentQualityFromBottom;
-		    	} else {
-		    		currentQuality = currentQualityFromTop;
-		    	}
 	        	page.redirect(PREFIX+":video:" + item.id + ":" + currentQuality);
 		    }
         }
