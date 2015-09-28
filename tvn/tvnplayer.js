@@ -23,6 +23,7 @@
 	
     var PREFIX = plugin.getDescriptor().id;
     var LOGO = plugin.path + "tvnplayer.png";
+    var BACKGROUND = plugin.path + "views/img/background.png";
 	var BASE_URL = "https://api.tvnplayer.pl/api/?v=3.0&authKey=ba786b315508f0920eca1c34d65534cd&platform=ConnectedTV&terminal=Samsung&format=json";
 	var BASE_ASSET_URL = "http://redir.atmcdn.pl/scale/o2/tvn/web-content/m/";
 	var USER_AGENT = "Mozilla/5.0 (SmartHub; SMART-TV; U; Linux/SmartTV; Maple2012) AppleWebKit/534.7 (KHTML, like Gecko) SmartTV Safari/534.7";
@@ -31,6 +32,20 @@
 	function d(c) {
 		print(JSON.stringify(c, null, 4));
 	}
+	
+    function setPageHeader(page, title, image) {
+        if (page.metadata) {
+            page.metadata.title = title;
+            page.metadata.logo = LOGO;
+            if (image) {
+            	page.metadata.background = image;
+            	page.metadata.backgroundAlpha = 0.3;
+            } else {
+            	page.metadata.background = BACKGROUND;
+            	page.metadata.backgroundAlpha = 0.7;
+            }
+        }
+    }
 		
     function createTitle(name, episode, season) {
         var title = name;
@@ -110,7 +125,7 @@
     plugin.addURI(PREFIX+":start", function (page) {
         page.type = "directory";
         page.loading = true;
-        page.metadata.title = plugin.getDescriptor().title;
+        setPageHeader(page, plugin.getDescriptor().title);
 
         var url = BASE_URL + "&m=mainInfo";
         var mainInfoRespone = showtime.httpReq(url);
@@ -119,7 +134,7 @@
         for (var i = 0; i < mainInfo.categories.length; i++) {
             item = mainInfo.categories[i];
             if (item.type == "catalog") {
-                page.appendItem(PREFIX+":" + item.type + ":" + item.id + ":" + item.name, "directory", {
+                page.appendItem(PREFIX+":" + item.type + ":" + item.id + ":" + item.name, "video", {
                     title: item.name,
                     icon: createThumbnailUrl(item.thumbnail[0])
                 });
@@ -133,7 +148,7 @@
 		var sort = "alfa";
 		var pageSize = 20;
         page.type = "directory";
-        page.metadata.title = pageTitle;
+        setPageHeader(page, pageTitle);
         function loader() {
 			page.loading = true;
 			var url = BASE_URL + "&m=getItems&isUserLogged=0&type=catalog&id="+arg+"&category=0&limit="+pageSize+"&sort="+sort+"&page="+pageNumber;
@@ -142,7 +157,7 @@
 			var allItemsCount = mainInfo.count_items;
 			for (var i = 0; i < mainInfo.items.length; i++) {
 				var item = mainInfo.items[i];
-				page.appendItem(PREFIX+":" + item.type + ":" + item.id + ":" + item.title, "video", {
+				page.appendItem(PREFIX+":" + item.type + ":" + item.id + ":" + item.title + ":" + createThumbnailUrl(item.thumbnail[0]), "video", {
 					title: item.title,
 					icon: createThumbnailUrl(item.thumbnail[0])
 				});
@@ -157,12 +172,12 @@
 		}
     });
     
-    plugin.addURI(PREFIX+":series:(.+):(.+)", function (page, arg, pageTitle) {
+    plugin.addURI(PREFIX+":series:(.+):(.+):(.+)", function (page, arg, pageTitle, background) {
         var pageNumber = 1;
 		var sort = "newest";
 		var pageSize = 20;
         page.type = "directory";
-        page.metadata.title = pageTitle;
+        setPageHeader(page, pageTitle, background);
         function loader() {     
 			page.loading = true;
 			var url = BASE_URL + "&m=getItems&isUserLogged=0&type=series&limit="+pageSize+"&page="+pageNumber+"&sort="+sort+"&id="+arg;
@@ -211,7 +226,7 @@
         } else {
             title = createTitle(item.serie_title, item.episode, item.season);
         }
-        page.metadata.title = title;
+        setPageHeader(page, title, createThumbnailUrl(item.thumbnail[0]));
         
         
         var videos = item.videos.main.video_content;
@@ -289,7 +304,7 @@
         } else {
             title = createTitle(item.serie_title, item.episode, item.season);
         }
-        page.metadata.title = title;
+        setPageHeader(page, title, createThumbnailUrl(item.thumbnail[0]));
         
         if (item.title && item.serie_title) {
 			metadata.title = item.serie_title+" - "+item.title;
