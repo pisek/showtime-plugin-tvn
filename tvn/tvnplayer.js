@@ -93,7 +93,7 @@
     
     var settings = plugin.createSettings(plugin.getDescriptor().title, LOGO, plugin.getDescriptor().synopsis);
     
-    settings.createMultiOpt('quality', "Jakość wideo (jeśli nie jest dostępna, wybrana będzie najwyższa możliwa, niższa od wybranej)", [
+    settings.createMultiOpt('quality', "Jakość wideo (jeśli takowej nie ma - wybrana zostanie najblizsza wybranej)", [
         ['letMeChoose', 'Daj mi wybrac', true],
         ['Standard', 'Standard'],
         ['HD', 'HD'],
@@ -220,6 +220,11 @@
 			return;
 		}
 		
+       	var desiredBitrate = toBitrate(service.quality);
+       	var currentBitrateFromTop;
+       	var currentQualityFromTop;
+       	var currentBitrateFromBottom;
+       	var currentQualityFromBottom;
         for (var i=0; i<videos.length; i++) {
             var video = videos[i];
             
@@ -232,39 +237,48 @@
 					icon: createThumbnailUrl(item.thumbnail[0])
 				});
             	
-            } else {	//find desired quality
+            } else {
             	
-            	if (service.quality == video.profile_name) {
+            	if (service.quality == video.profile_name) {	//find desired quality
             		page.redirect(PREFIX+":video:" + item.id + ":" + video.profile_name);
             		break;
             	}
             	
+            	var video = videos[i];
+		        var bitrate = toBitrate(video.profile_name);
+
+		        //find closest quality from top
+		        if (bitrate > currentBitrateFromTop && bitrate < desiredBitrate) {
+					currentBitrateFromTop = bitrate;
+					currentQualityFromTop = video.profile_name;
+				}
+            	
+	        	//find closest quality from bottom
+		        if (bitrate > currentBitrateFromBottom && bitrate < desiredBitrate) {
+					currentBitrateFromBottom = bitrate;
+					currentQualityFromBottom = video.profile_name;
+				}
+		        
             }
             
         }
+        page.loading = false;
         
-        if (service.quality != 'letMeChoose') {	//and still did not found desired quality
-        	var desiredBitrate = toBitrate(service.quality);
-        	var currentBitrate;
-        	var currentQuality;
-        	for (var i=0; i<videos.length; i++) {
-	            var video = videos[i];
-	            var bitrate = toBitrate(video.profile_name);
-	            if (bitrate > currentBitrate && bitrate < desiredBitrate) {
-					currentBitrate = bitrate;
-					currentQuality = video.profile_name;
-				}
-	        }
-	        
-	        if (currentQuality == null) {
-	        	page.error("Selected video is not available on this platform.");
+        if (service.quality != 'letMeChoose') {
+        	if (currentQualityFromTop == null && currentQualityFromBottom == null) {
+		       	page.error("Selected video is not available on this platform.");
 				return;
-	        }
-	        page.redirect(PREFIX+":video:" + item.id + ":" + currentQuality);
-	        
+		    } else {
+				var currentQuality;
+		    	if (currentQualityFromBottom != null) {	//take from bottom first
+		    		currentQuality = currentQualityFromBottom;
+		    	} else {
+		    		currentQuality = currentQualityFromTop;
+		    	}
+	        	page.redirect(PREFIX+":video:" + item.id + ":" + currentQuality);
+		    }
         }
         
-        page.loading = false;
     });
     
     plugin.addURI(PREFIX+":video:(.+):(.+)", function (page, arg, quality) {
@@ -276,7 +290,7 @@
         var item = mainInfo.item;
         var title;
         var metadata = {};
-        page.loading = false;
+        page.loading = true;
         if (item.title) {
             title = item.title;
         } else {
