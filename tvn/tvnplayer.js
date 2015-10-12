@@ -124,6 +124,7 @@
 
     plugin.addURI(PREFIX+":start", function (page) {
         page.type = "directory";
+        page.contents = "movies";
         page.loading = true;
         setPageHeader(page, plugin.getDescriptor().title);
 
@@ -148,6 +149,7 @@
 		var sort = "alfa";
 		var pageSize = 20;
         page.type = "directory";
+        page.contents = "movies";
         setPageHeader(page, pageTitle);
         function loader() {
 			page.loading = true;
@@ -177,6 +179,7 @@
 		var sort = "newest";
 		var pageSize = 20;
         page.type = "directory";
+        page.contents = "movies";
         setPageHeader(page, pageTitle, background);
         function loader() {     
 			page.loading = true;
@@ -217,6 +220,7 @@
         
         if (service.quality == 'letMeChoose') {
         	page.type = "directory";
+        	page.contents = "movies";
         } else {
         	page.type = "video";
         }
