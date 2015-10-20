@@ -23,7 +23,7 @@
 	
     var PREFIX = plugin.getDescriptor().id;
     var LOGO = plugin.path + "tvnplayer.png";
-    var BACKGROUND = plugin.path + "views/img/background.png";
+    var BACKGROUND = plugin.path + "views/img/background.jpg";
 	var BASE_URL = "https://api.tvnplayer.pl/api/?v=3.0&authKey=ba786b315508f0920eca1c34d65534cd&platform=ConnectedTV&terminal=Samsung&format=json";
 	var BASE_ASSET_URL = "http://redir.atmcdn.pl/scale/o2/tvn/web-content/m/";
 	var USER_AGENT = "Mozilla/5.0 (SmartHub; SMART-TV; U; Linux/SmartTV; Maple2012) AppleWebKit/534.7 (KHTML, like Gecko) SmartTV Safari/534.7";
